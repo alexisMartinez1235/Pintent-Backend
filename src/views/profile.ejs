@@ -1,0 +1,9 @@
+<% layout('layouts/main.ejs') %>
+
+<h1>Profile</h1>
+<%if (email) {%>
+  <h4><%= email %></h4>
+<% } %>
+<a href="/logout">logout</a> 
+<a href="/list">list</a> 
+<a href="/list/task">list/task</a> 
