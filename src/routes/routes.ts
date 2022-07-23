@@ -15,49 +15,49 @@ router.get('/signup', isUnauthenticated, (req: any, res: any) => {
   res.render('signup');
 });
 
-router.post(
-  '/signup',
-  isUnauthenticated,
-  (req, res, next) => {
-    passport.authenticate(userReg.localSignup, {
+router.post('/signup', isUnauthenticated, (req, res, next) => {
+  passport.authenticate(
+    userReg.localSignup,
+    {
       successRedirect: '/profile',
       failureRedirect: '/signup',
       passReqToCallback: true,
       failureFlash: true,
-    }, (err, user) => {
+    },
+    (err, user) => {
       if (err) return err;
       if (!user) return res.redirect('/signup');
       return req.logIn(user, (logInErr) => {
         if (logInErr) return logInErr;
         return req.session.save(() => res.redirect('/profile'));
       });
-    })(req, res, next);
-  },
-);
+    }
+  )(req, res, next);
+});
 
 router.get('/signin', isUnauthenticated, (req, res) => {
   res.render('signin');
 });
 
-router.post(
-  '/signin',
-  isUnauthenticated,
-  (req, res, next) => {
-    passport.authenticate(userReg.localSignin, {
+router.post('/signin', isUnauthenticated, (req, res, next) => {
+  passport.authenticate(
+    userReg.localSignin,
+    {
       successRedirect: '/profile',
       failureRedirect: '/signin',
       passReqToCallback: true,
       failureFlash: true,
-    }, (err, user) => {
+    },
+    (err, user) => {
       if (err) return err;
       if (!user) return res.redirect('/signin');
       return req.logIn(user, (logInErr) => {
         if (logInErr) return logInErr;
         return req.session.save(() => res.redirect('/profile'));
       });
-    })(req, res, next);
-  },
-);
+    }
+  )(req, res, next);
+});
 
 router.use(isAuthenticated); // authentificate before go to profile, logout, etc
 
@@ -69,10 +69,17 @@ router.get('/profile', (req, res) => {
   res.render('profile', { email });
 });
 
-router.get('/logout', (req, _res, next) => {
-  req.logOut();
-  next();
-}, isAuthenticated);
+router.get(
+  '/logout',
+  (req, res, next) => {
+    req.logOut((err) => {
+      if (err) return next(err);
+      res.redirect('/');
+    });
+    next();
+  },
+  isAuthenticated
+);
 
 // routes of /
 router.use('/list', list);
