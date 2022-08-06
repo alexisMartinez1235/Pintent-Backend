@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import UserHasElement from '../model/UserHasElement';
+import PersonHasElement from '../model/PersonHasElement';
 import { startTimer, stopTimer } from '../utils/metrics';
 // import list from './list';
 
@@ -7,12 +7,11 @@ const shareElement = express.Router();
 
 // verifies user access to list
 shareElement.use((req, res, next) => {
-  const { idList } = req.body;
-  const { email: emailPerson } = req.app.locals;
+  const { email: emailPerson, idList } = req.app.locals;
 
-  UserHasElement.findOne({
+  PersonHasElement.findOne({
     where: { idList, emailPerson },
-  }).then((personhList: UserHasElement | null) => {
+  }).then((personhList: PersonHasElement | null) => {
     if (personhList !== null) return next();
     return res.status(200).json({ data: 'User dont have permissions to access to this list', success: false });
   }).catch((err: any) => {
@@ -22,34 +21,34 @@ shareElement.use((req, res, next) => {
 
 shareElement.use(startTimer);
 
-shareElement.get('/', (req : Request, res : Response, next) => {
+shareElement.get('/', (req : Request, res : Response) => {
   const variable : string = req.query.variable?.toString() || 'emailPerson';
   const order : string = req.query.order?.toString() || 'ASC';
   const { idList } = req.app.locals.list;
   
-  UserHasElement.findAll({
+  PersonHasElement.findAll({
     // attributes: ['emailPerson'],
     order: [
       [variable, order],
     ],
     where: { idList },
-  }).then((personhList: UserHasElement[]) => {
+  }).then((personhList: PersonHasElement[]) => {
     req.app.locals.success = true;
-    res.status(200).json({ data: personhList, success: true });
-    next();
+    return res.status(200).json({ data: personhList, success: true });
   }).catch((err: any) => {
     res.status(500).json({ data: err, success: false });
   });
-});
+}, stopTimer);
 
 // verifies owner permissions
 shareElement.use((req, res, next) => {
-  const { idList, email } = req.body;
+  const { email } = req.body;
   const { email: emailPerson } = req.app.locals;
+  const { idList } = req.app.locals.list;
 
-  UserHasElement.findOne({
+  PersonHasElement.findOne({
     where: { idList, emailPerson },
-  }).then((personhList: UserHasElement | null) => {
+  }).then((personhList: PersonHasElement | null) => {
     if ((personhList !== null && personhList.getDataValue('isOwner')) || email === emailPerson) return next();
     return res.status(200).json({ data: 'User dont have owner permissions', success: false });
   }).catch((err: any) => {
@@ -60,16 +59,16 @@ shareElement.use((req, res, next) => {
 shareElement.post('/', (req : Request, res : Response, next) => {
   const {
     email: emailPerson,
-    idList,
     isOwner,
     canRead,
     canWrite,
   } = req.body;
+  const { idList } = req.app.locals.list;
 
-  UserHasElement.create({
+  PersonHasElement.create({
     emailPerson, idList, isOwner, canRead, canWrite,
   })
-    .then((personhList: UserHasElement) => {
+    .then((personhList: PersonHasElement) => {
       req.app.locals.success = true;
       res.status(200).json({ data: personhList, success: true });
       next();
@@ -79,9 +78,10 @@ shareElement.post('/', (req : Request, res : Response, next) => {
 });
 
 shareElement.delete('/', (req : Request, res : Response, next) => {
-  const { email: emailPerson, idList } = req.body;
+  const { email: emailPerson } = req.body;
+  const { idList } = req.app.locals.list;
 
-  UserHasElement.destroy({ where: { emailPerson, idList } })
+  PersonHasElement.destroy({ where: { emailPerson, idList } })
     .then((results: any) => {
       req.app.locals.success = true;
       res.status(200).json({ data: results, success: true });

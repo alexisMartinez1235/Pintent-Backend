@@ -1,6 +1,6 @@
 import { DataTypes, Model } from '@sequelize/core';
 import { sequelize } from '../utils/database';
-import User from './User';
+import Person from './Person';
 // import List from './List';
 
 class GeneralElement extends Model {
@@ -24,7 +24,7 @@ GeneralElement.init({
     type: DataTypes.STRING(30),
     allowNull: false,
     references: {
-      model: User,
+      model: Person,
       key: 'email',
     },
   },
@@ -40,7 +40,7 @@ GeneralElement.init({
   // Other model options go here
   sequelize, // We need to pass the connection instance
   modelName: 'GENERAL_ELEMENT', // We need to choose the model name
-  timestamps: true, // disable creation date
+  timestamps: false, // disable creation date
 });
 
 GeneralElement.sync();

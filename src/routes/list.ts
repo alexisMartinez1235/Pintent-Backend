@@ -4,41 +4,31 @@ import List from '../model/List';
 import pin from './pin';
 import shareElement from './shareElement';
 import { startTimer, stopTimer } from '../utils/metrics';
-import UserHasElement from '../model/UserHasElement';
-import User from '../model/User';
+import PersonHasElement from '../model/PersonHasElement';
 import { sequelize } from '../utils/database';
-// import { databaseResponseTimeHistogram } from '../utils/metrics';
+
 
 const list = express.Router();
 
-// save email for services
-list.use((req, _res, next) => {
-  if (req.user instanceof User) {
-    req.app.locals.email = req.user.getDataValue('email');
-  }
-  next();
+list.use((req : Request, res : Response, next: any) => {
+  const idList: string = req.app.locals.idList?.toString();
+  
+  PersonHasElement.findOne({
+    where: { idList, emailPerson: req.app.locals.email },
+  }).then((resList: List | null) => {
+    req.app.locals.list = resList;
+    // console.log(resList);
+    next();
+  })
+    .catch((err: any) => {
+      res.status(500).json({ data: err, success: false });
+    });
 });
 
-function searchList(req : Request, res : Response, next: any) {
-  const idList: string | undefined = req.query.idList?.toString();
-  
-  if (idList !== undefined) {
-    UserHasElement.findOne({
-      where: { idList, emailPerson: req.app.locals.email },
-    }).then((resList: List | null) => {
-      req.app.locals.list = resList;
-      // console.log(resList);
-      next();
-    })
-      .catch((err: any) => {
-        res.status(500).json({ data: err, success: false });
-      });
-  }
-}
-
 // routes
-list.use('/task', searchList, pin);
-list.use('/share', searchList, shareElement);
+list.use('/pin', pin);
+list.use('/share', shareElement);
+
 
 list.use(startTimer);
 
@@ -47,62 +37,41 @@ list.get('/', (req : Request, res : Response, next) => {
   const order : string = req.query.order?.toString() || 'ASC'; // ASC | DESC
   const inTrash: string = req.query.inTrash?.toString() || 'false';
   const { email: myEmail } = req.app.locals;
+  const idList: string = req.app.locals.idList?.toString();
 
-  // startTimer(req);
-
-  sequelize.query('SELECT * FROM `list` FULL JOIN `PERSON_HAS_LIST` ON id = `PERSON_HAS_LIST`.idList WHERE emailPerson=:myEmail AND inTrash=:inTrash ORDER BY :variable :order', {
+  sequelize.query(' \
+    SELECT * \
+    FROM `LIST` \
+    FULL JOIN `PERSON_HAS_ELEMENT` ON id = `PERSON_HAS_ELEMENT`.idList \
+    WHERE emailPerson=:myEmail AND \
+      inTrash=:inTrash AND \
+      `PERSON_HAS_ELEMENT`.idList=:idList \
+    ORDER BY :variable :order',
+  {
     type: QueryTypes.SELECT,
     replacements: {
       myEmail,
       variable,
       order,
       inTrash,
+      idList,
     },
   }).then((personHasList: any[]) => {
+    if (personHasList.length === 0) return res.status(404).send({
+      data: 'List not found',
+      success: false,
+    });
     req.app.locals.success = true;
-    res.status(200).json({ data: personHasList, success: true });
+    res.status(200).json({ data: personHasList[0], success: true });
     // stopTimer(req);
-    next();
+    return next();
   }).catch((err: any) => {
     res.status(500).json({ data: err, success: false });
   });
 });
 
-list.post('/', (req : Request, res : Response, next) => {
-  const { listName } = req.body;
-  
-  List.create({
-    listName, email: req.app.locals.email,
-  }).then((listCreated: List) => {
-    req.app.locals.success = true;
-    UserHasElement.create({
-      emailPerson: req.app.locals.email,
-      idList: listCreated.getDataValue('id'),
-      isOwner: true,
-      canRead: true,
-      canWrite: true,
-    }).then((personHList: UserHasElement | null) => {
-      res.status(200).json({
-        data: [listCreated, personHList],
-        success: true,
-      });
-      next();
-    }).catch((err: any) => {
-      res.status(500).json({
-        data: err,
-        success: false,
-      });
-    });
-  }).catch((err: any) => {
-    res.status(500).json({
-      data: err,
-      success: false,
-    });
-  });
-});
-
 list.put('/logical', (req : Request, res : Response, next) => {
-  const id: string | undefined = req.query.idList?.toString();
+  const { idList: id } = req.app.locals;
 
   List.update(
     { inTrash: true },
@@ -117,9 +86,9 @@ list.put('/logical', (req : Request, res : Response, next) => {
 });
 
 list.delete('/', (req : Request, res : Response, next) => {
-  const idList: string | undefined = req.query.idList?.toString();
+  const { idList } = req.app.locals;
   
-  UserHasElement.destroy({
+  PersonHasElement.destroy({
     where: { idList, emailPerson: req.app.locals.email },
   }).then(() => {
     List.destroy({ where: { id: idList } })
@@ -140,3 +109,4 @@ list.delete('/', (req : Request, res : Response, next) => {
 list.use(stopTimer);
 
 export default list;
+

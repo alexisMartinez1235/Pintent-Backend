@@ -3,8 +3,8 @@ import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { userReg } from '../utils/local-auth';
 import { sessionKey } from '../utils/keys';
-import User from '../model/User';
-import list from './list';
+import Person from '../model/Person';
+import lists from './lists';
 // import { startTimer } from '../utils/metrics';
 
 function loggin(user: any, req: any, res: any, next: any) {
@@ -78,8 +78,12 @@ api.use(passport.authenticate(userReg.tokenJWT, { session: false }));
 // authenticated routes
 //
 
-api.get('/logout', (req, res) => {
-  req.logOut();
+api.get('/logout', (req, res, next) => {
+  req.logOut((err) => {
+    if (err) { return next(err); }
+    res.redirect('/');
+  });
+
   res.json({
     data: 'You have Log out',
     success: true,
@@ -89,7 +93,7 @@ api.get('/logout', (req, res) => {
 api.post(
   '/profile',
   (req, res) => {
-    if (req.user instanceof User) {
+    if (req.user instanceof Person) {
       res.json({
         data: {
           message: 'You already have to access to profile!',
@@ -109,7 +113,8 @@ api.post(
 // api.use(startTimer);
 
 // routes of /api
-api.use('/list', list);
+api.use('/list', lists);
+
 // api.use('/user', personHasList);
 
 export default api;

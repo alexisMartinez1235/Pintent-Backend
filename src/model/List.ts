@@ -15,7 +15,8 @@ List.init({
     references:{
       model: GeneralElement,
       key: 'id',
-    }
+    },
+    defaultValue: DataTypes.UUIDV4, 
   },
   listName: {
     type: DataTypes.STRING(20),
@@ -38,7 +39,7 @@ List.init({
   // Other model options go here
   sequelize, // We need to pass the connection instance
   modelName: 'LIST', // We need to choose the model name
-  timestamps: true, // disable creation date
+  timestamps: false, // disable creation date
 });
 
 List.sync();

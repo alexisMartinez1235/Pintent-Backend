@@ -14,23 +14,22 @@ import {
   restResponseTimeHistogram,
   // databaseResponseTimeHistorgram
 } from './utils/metrics';
+import { mongo_uri, mongoSessionCollectionName } from './utils/database';
 import routes from './routes/routes';
-import { sequelize } from './utils/database';
-import { sessionKey, sessionName } from './utils/keys';
+import {
+  sessionKey,
+  sessionName
+} from './utils/keys';
 import api from './routes/api';
 
-const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const MongoDBStore = require('connect-mongodb-session')(session);
 const engine = require('ejs-mate');
 
 const app = express();
 const port: number = 8000;
-
-const sessionStore = new SequelizeStore({
-  db: sequelize,
-  // The interval at which to cleanup expired sessions in milliseconds. 60 minutes
-  checkExpirationInterval: 6 * 60 * 60 * 1000,
-  // The maximum age (in milliseconds) of a valid session. 4
-  expiration: 4 * 60 * 60 * 1000,
+const sessionStore = new MongoDBStore({
+  uri: mongo_uri,
+  collection: mongoSessionCollectionName
 });
 
 require('./utils/local-auth');
@@ -39,6 +38,7 @@ require('./utils/local-auth');
 app.use(cors({
   credentials: true,
 }));
+
 app.use(morgan('dev')); // see debug in terminal
 app.use(cookieParser());
 
@@ -48,15 +48,15 @@ app.use(
     secret: sessionKey,
     store: sessionStore,
     name: sessionName,
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
       secure: false,
     },
   }),
 );
-sessionStore.sync(); // for create Sessions DB
+
 //------------------------------------
 
 app.use(flash()); // is after because use session as passport
@@ -88,25 +88,6 @@ app.use(rateLimit({
     success: false,
   },
 }));
-app.use(morgan('dev')); // see debug in terminal
-app.use(cookieParser());
-
-// -- config session
-app.use(
-  session({
-    secret: sessionKey,
-    store: sessionStore,
-    name: sessionName,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // 24 hours
-      secure: true,
-    },
-  }),
-);
-sessionStore.sync(); // for create Sessions DB
-//------------------------------------
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

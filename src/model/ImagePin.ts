@@ -1,9 +1,9 @@
 import { DataTypes, Model } from '@sequelize/core';
 import { sequelize } from '../utils/database';
-import User from './User';
-import GeneralElement from './GeneralElement';
+// import User from './User';
+// import GeneralElement from './GeneralElement';
 
-// import List from './List';
+import List from './List';
 
 class ImagePin extends Model {
   // public modifyTask() {
@@ -16,32 +16,43 @@ ImagePin.init({
   id: {
     type: DataTypes.UUID,
     primaryKey: true,
-    references:{
-      model: GeneralElement,
-      key: 'id',
-    }
+    defaultValue: DataTypes.UUIDV4,
+    // references:{
+    //   model: GeneralElement,
+    //   key: 'id',
+    // }
+  },
+  email: {
+    type: DataTypes.STRING(30),
+    allowNull: false,
+    primaryKey: false,
   },
   image: {
     type: DataTypes.BLOB('long'),
-    allowNull: false,
+    allowNull: true,
   },
   description: {
     type: DataTypes.STRING(20),
     allowNull: false,
   },
-  // idList: {
-  //   type: DataTypes.UUID,
-  //   defaultValue: DataTypes.UUIDV4,
-  //   references: {
-  //     model: List,
-  //     key: 'id',
-  //   },
-  // },
+  idList: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    references: {
+      model: List,
+      key: 'id',
+    },
+  },
+  inTrash: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 }, {
   // Other model options go here
   sequelize, // We need to pass the connection instance
   modelName: 'IMAGE_PIN', // We need to choose the model name
-  timestamps: false, // disable creation date
+  timestamps: true, // disable creation date
 });
 
 ImagePin.sync();
