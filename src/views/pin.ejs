@@ -1,0 +1,48 @@
+<% layout('layouts/main.ejs') %>
+
+<h1>Pin</h1>
+<h3>
+  <%= path %>
+</h3>
+<a href="/profile">profile</a>
+
+<%
+if (data.length === undefined) {
+  data = [data]
+%>
+  <form action="<%= path %>" method="POST">
+    <input
+      type="description"
+      name="description"
+      placeHolder="Insert pin description:"
+    >
+    <button
+      type="submit"
+    >
+      Add pin
+    </button>
+  </form>
+<% } %>
+
+<ul> 
+  <% data.map((pin) => { %>
+      <%= path %>/<%= pin.id %>
+      <li>
+        <a href="<%= path %>/<%= pin.id %>" >
+          <button>
+            <h1> email: <%= pin.email %> </h1>
+            <h3>image:</h3>
+            <img src="<%= pin.image %>" alt="" width="500">
+            <h3> descr: <%= pin.description %> </h3>
+            <h4> inTrash: <%= pin.inTrash %> </h4>
+            <h4> createdAt: <%= pin.createdAt %> </h4>
+            <h4> updatedAt: <%= pin.updatedAt %> </h4>
+            <!-- <%=  JSON.stringify(pin) %> -->
+          </button>
+        </a>
+        <form method="DELETE" action="<%= path %>/<%= pin.id %>">
+          <button type="submit">Delete</button>
+        </form>
+      </li>
+  <% }); %>
+</ul>

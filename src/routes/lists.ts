@@ -30,7 +30,7 @@ lists.get('/', (req : Request, res : Response, next) => {
   const variable : string = req.query.variable?.toString() || 'id'; // ID, etc
   const order : string = req.query.order?.toString() || 'ASC'; // ASC | DESC
   const inTrash: string = req.query.inTrash?.toString() || 'false';
-  const { email: myEmail } = req.app.locals;
+  const { email: myEmail, formatRes } = req.app.locals;
 
   // startTimer(req);
 
@@ -51,11 +51,11 @@ lists.get('/', (req : Request, res : Response, next) => {
     },
   }).then((personHasList: any[]) => {
     req.app.locals.success = true;
-    res.status(200).json({ data: personHasList, success: true });
+    res.status(200).format(formatRes(req.originalUrl, { data: personHasList, success: true }));
     // stopTimer(req);
     next();
   }).catch((err: any) => {
-    res.status(500).json({ data: err, success: false });
+    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
   });
 });
 

@@ -1,0 +1,40 @@
+<% layout('layouts/main.ejs') %>
+<h1>List</h1>
+<h3>
+  <%=  path %> 
+</h3>
+<a href="/profile">profile</a> 
+
+<%
+if (data.length === undefined) {
+  data = [data]
+%>
+  <form action="<%= path %>" method="POST">
+    <input
+      type="listName"
+      name="listName"
+      placeHolder="Insert list name:"
+    >
+    <button
+      type="submit"
+    >
+      Add list
+    </button>
+  </form>
+<% } %>
+
+<ul>
+  <% data.map((list) => { %>
+      /list/<%= list.idList %>/pin  
+      <li>
+        <button
+          type="submit"
+          name="optionSelect"
+        >
+          <a href="/list/<%= list.idList %>/pin" >
+            <%=  JSON.stringify(list) %>
+          </a>
+        </button>
+      </li>
+  <% }); %>
+</ul>

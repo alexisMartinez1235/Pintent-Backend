@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { QueryTypes } from 'sequelize';
 import List from '../model/List';
-import pin from './pin';
+import pins from './pins';
 import shareElement from './shareElement';
 import { startTimer, stopTimer } from '../utils/metrics';
 import PersonHasElement from '../model/PersonHasElement';
@@ -12,7 +12,8 @@ const list = express.Router();
 
 list.use((req : Request, res : Response, next: any) => {
   const idList: string = req.app.locals.idList?.toString();
-  
+  const { formatRes } = req.app.locals;
+
   PersonHasElement.findOne({
     where: { idList, emailPerson: req.app.locals.email },
   }).then((resList: List | null) => {
@@ -21,12 +22,12 @@ list.use((req : Request, res : Response, next: any) => {
     next();
   })
     .catch((err: any) => {
-      res.status(500).json({ data: err, success: false });
+      res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }, "list"));
     });
 });
 
-// routes
-list.use('/pin', pin);
+// routes 
+list.use('/pin', pins);
 list.use('/share', shareElement);
 
 
@@ -36,8 +37,8 @@ list.get('/', (req : Request, res : Response, next) => {
   const variable : string = req.query.variable?.toString() || 'id'; // ID, etc
   const order : string = req.query.order?.toString() || 'ASC'; // ASC | DESC
   const inTrash: string = req.query.inTrash?.toString() || 'false';
-  const { email: myEmail } = req.app.locals;
   const idList: string = req.app.locals.idList?.toString();
+  const { email: myEmail, formatRes } = req.app.locals;
 
   sequelize.query(' \
     SELECT * \
@@ -62,46 +63,46 @@ list.get('/', (req : Request, res : Response, next) => {
       success: false,
     });
     req.app.locals.success = true;
-    res.status(200).json({ data: personHasList[0], success: true });
+    res.status(200).format(formatRes(req.originalUrl, { data: personHasList[0], success: true }, "list"));
     // stopTimer(req);
     return next();
   }).catch((err: any) => {
-    res.status(500).json({ data: err, success: false });
+    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }, "list"));
   });
 });
 
 list.put('/logical', (req : Request, res : Response, next) => {
-  const { idList: id } = req.app.locals;
+  const { idList: id, formatRes } = req.app.locals;
 
   List.update(
     { inTrash: true },
     { where: { id } },
   ).then((results: any) => {
     req.app.locals.success = true;
-    res.status(200).json({ data: results, success: true });
+    res.status(200).format(formatRes(req.originalUrl, { data: results, success: true }, "list"));
     next();
   }).catch((err: any) => {
-    res.status(500).json({ data: err, success: false });
+    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
   });
 });
 
 list.delete('/', (req : Request, res : Response, next) => {
-  const { idList } = req.app.locals;
+  const { idList, formatRes } = req.app.locals;
   
   PersonHasElement.destroy({
     where: { idList, emailPerson: req.app.locals.email },
   }).then(() => {
     List.destroy({ where: { id: idList } })
       .then((resultsListD: any) => {
-        if (resultsListD === 0) return res.status(404).json({ data: resultsListD, success: false });
+        if (resultsListD === 0) return res.status(404).format(formatRes(req.originalUrl, { data: resultsListD, success: false }));
         req.app.locals.success = true;
-        res.status(200).json({ data: resultsListD, success: true });
+        res.status(200).format(formatRes(req.originalUrl, { data: resultsListD, success: true }, "list"));
         return next();
       }).catch((err: any) => {
-        res.status(500).json({ data: err, success: false });
+        res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
       });
   }).catch((err: any) => {
-    res.status(500).json({ data: err, success: false });
+    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
   });
 });
 

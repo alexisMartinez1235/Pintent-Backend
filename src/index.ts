@@ -116,6 +116,52 @@ app.use(responseTime((req: Request, res: Response, time: number) => {
     // }, time * 1000);
   }
 }));
+// routeslist
+app.locals.routes = ["list", "pin", "profile"];
+
+// adapter for res.json
+app.use((req, res, next) => {
+  req.app.locals.formatRes = (originalUrl: string, responseData: any, _e: String) => {
+    let route = originalUrl.replace(/\/$/i,'');
+    let index = 0;
+    let end_index = 0;
+
+    app.locals.routes.forEach((route: string) => {
+      if (originalUrl.lastIndexOf(route) > index) {
+        index = originalUrl.lastIndexOf(route);
+        end_index = index + route.length;
+      }
+    });
+    
+    route = route.substring(index, end_index);
+    console.log(route);
+
+    return {
+      'text/html': () => {
+        res.render(route, {
+          ...responseData,
+          path: originalUrl
+        });
+      },
+      'application/json': () => {
+        res.json(responseData);
+      },  
+      'default': () => {  
+        res.status(406).send('Not Acceptable');
+      }
+    };
+  };
+  next();
+  // res
+  //   .status(200)
+  //   .format(
+  //     req.app.locals.formatRes(req.originalUrl, {
+  //       data: {
+  //         lists: ["list_a", "list_b", "list_c"]
+  //       },
+  //       success: true,
+  //     }));
+});
 
 // routes
 app.use('/api', api);

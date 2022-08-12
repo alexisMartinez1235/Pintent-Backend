@@ -10,65 +10,47 @@ pin.get('/', (req : Request, res : Response, next) => {
   const variable : string = req.query.variable?.toString() || 'ID'; // ID
   const order : string = req.query.order?.toString() || 'ASC'; // ASC | DESC  
   const inTrash: boolean = ( req.query.inTrash?.toString() === 'true' ) ? true : false;
-  const { email, list } = req.app.locals;
+  const { idPin, email, list, formatRes } = req.app.locals;
   
-  ImagePin.findAll({
+  ImagePin.findOne({
     order: [
       [variable, order],
     ],
-    where: { email, idList: list.getDataValue('idList'), inTrash },
-  }).then((tasks: ImagePin[]) => {
+    where: { email, idList: list.getDataValue('idList'), inTrash, id: idPin},
+  }).then((tasks: ImagePin | null) => {
     req.app.locals.success = true;
-    res.status(200).json({ data: tasks, success: true });
+    res.status(200).format(formatRes(req.originalUrl, { data: tasks, success: true }));
     next();
   }).catch((err: any) => {
-    res.status(500).json({ data: err, success: false });
+    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
   });
 });
 
-pin.post('/', (req : Request, res : Response, next) => {
-  const { description } = req.body;
-  const { email, list } = req.app.locals;
-  
-  ImagePin.create({
-    description, email, idList: list.getDataValue('idList'),
-  })
-    .then((taskCreated: ImagePin) => {
-      req.app.locals.success = true;
-      res.status(200).json({ data: taskCreated, success: true });
-      next();
-    }).catch((err: any) => {
-      res.status(500).json({ data: err, success: false });
-    });
-});
-
 pin.put('/logical', (req : Request, res : Response, next) => {
-  const { id } = req.body;
-  const { list } = req.app.locals;
+  const { idPin, list, formatRes } = req.app.locals;
 
   ImagePin.update(
     { inTrash: true },
-    { where: { id, idList: list.getDataValue('idList') } },
+    { where: { id: idPin, idList: list.getDataValue('idList') } },
   ).then((results: any) => {
     req.app.locals.success = true;
-    res.status(200).json({ data: results, success: true });
+    res.status(200).format(formatRes(req.originalUrl, { data: results, success: true }));
     next();
   }).catch((err: any) => {
-    res.status(500).json({ data: err, success: false });
+    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
   });
 });
 
 pin.delete('/', (req : Request, res : Response, next) => {
-  const { id } = req.body;
-  const { list } = req.app.locals;
-  
-  ImagePin.destroy({ where: { id, idList: list.getDataValue('idList') } })
+  const { idPin, list, formatRes } = req.app.locals;
+
+  ImagePin.destroy({ where: { id: idPin, idList: list.getDataValue('idList') } })
     .then((results: any) => {
       req.app.locals.success = true;
-      res.status(200).json({ data: results, success: true });
+      res.status(200).format(formatRes(req.originalUrl, { data: results, success: true }));
       next();
     }).catch((err: any) => {
-      res.status(500).json({ data: err, success: false });
+      res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
     });
 });
 

@@ -109,9 +109,6 @@ api.post(
   },
 );
 
-// start prometheus metric timer for db queries
-// api.use(startTimer);
-
 // routes of /api
 api.use('/list', lists);
 
