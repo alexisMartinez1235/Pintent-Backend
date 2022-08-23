@@ -10,26 +10,25 @@ import { sequelize } from '../utils/database';
 
 const list = express.Router();
 
-list.use((req : Request, res : Response, next: any) => {
+list.use((req : Request, res : Response, next) => {
   const idList: string = req.app.locals.idList?.toString();
-  const { formatRes } = req.app.locals;
+  const { formatRes, email } = req.app.locals;
 
   PersonHasElement.findOne({
-    where: { idList, emailPerson: req.app.locals.email },
+    where: { idList, emailPerson: email },
   }).then((resList: List | null) => {
     req.app.locals.list = resList;
     // console.log(resList);
     next();
   })
     .catch((err: any) => {
-      res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }, "list"));
+      res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
     });
 });
 
 // routes 
 list.use('/pin', pins);
 list.use('/share', shareElement);
-
 
 list.use(startTimer);
 
@@ -63,11 +62,11 @@ list.get('/', (req : Request, res : Response, next) => {
       success: false,
     });
     req.app.locals.success = true;
-    res.status(200).format(formatRes(req.originalUrl, { data: personHasList[0], success: true }, "list"));
+    res.status(200).format(formatRes(req.originalUrl, { data: personHasList[0], success: true }));
     // stopTimer(req);
     return next();
   }).catch((err: any) => {
-    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }, "list"));
+    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
   });
 });
 
@@ -79,7 +78,7 @@ list.put('/logical', (req : Request, res : Response, next) => {
     { where: { id } },
   ).then((results: any) => {
     req.app.locals.success = true;
-    res.status(200).format(formatRes(req.originalUrl, { data: results, success: true }, "list"));
+    res.status(200).format(formatRes(req.originalUrl, { data: results, success: true }));
     next();
   }).catch((err: any) => {
     res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
@@ -96,7 +95,7 @@ list.delete('/', (req : Request, res : Response, next) => {
       .then((resultsListD: any) => {
         if (resultsListD === 0) return res.status(404).format(formatRes(req.originalUrl, { data: resultsListD, success: false }));
         req.app.locals.success = true;
-        res.status(200).format(formatRes(req.originalUrl, { data: resultsListD, success: true }, "list"));
+        res.status(200).format(formatRes(req.originalUrl, { data: resultsListD, success: true }));
         return next();
       }).catch((err: any) => {
         res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));

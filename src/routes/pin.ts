@@ -16,7 +16,7 @@ pin.get('/', (req : Request, res : Response, next) => {
     order: [
       [variable, order],
     ],
-    where: { email, idList: list.getDataValue('idList'), inTrash, id: idPin},
+    where: { email, idList: list.getDataValue('idList'), inTrash, id: idPin },
   }).then((tasks: ImagePin | null) => {
     req.app.locals.success = true;
     res.status(200).format(formatRes(req.originalUrl, { data: tasks, success: true }));
@@ -41,7 +41,7 @@ pin.put('/logical', (req : Request, res : Response, next) => {
   });
 });
 
-pin.delete('/', (req : Request, res : Response, next) => {
+pin.delete('/', (req, res, next) => {
   const { idPin, list, formatRes } = req.app.locals;
 
   ImagePin.destroy({ where: { id: idPin, idList: list.getDataValue('idList') } })

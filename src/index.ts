@@ -48,8 +48,8 @@ app.use(
     secret: sessionKey,
     store: sessionStore,
     name: sessionName,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
       secure: false,
@@ -140,11 +140,13 @@ app.use((req, res, next) => {
       'text/html': () => {
         res.render(route, {
           ...responseData,
-          path: originalUrl
+          path: originalUrl,
+          // async: false,
         });
       },
       'application/json': () => {
         res.json(responseData);
+
       },  
       'default': () => {  
         res.status(406).send('Not Acceptable');
@@ -152,15 +154,6 @@ app.use((req, res, next) => {
     };
   };
   next();
-  // res
-  //   .status(200)
-  //   .format(
-  //     req.app.locals.formatRes(req.originalUrl, {
-  //       data: {
-  //         lists: ["list_a", "list_b", "list_c"]
-  //       },
-  //       success: true,
-  //     }));
 });
 
 // routes

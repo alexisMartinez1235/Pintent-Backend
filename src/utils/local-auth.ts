@@ -13,12 +13,13 @@ export const userReg = {
 };
 // save user to dont ask for the email and password in every route
 passport.serializeUser((user: any, done: any) => {
-  console.log('serialize User');
+  console.log('Serialize User');
   done(null, user.id);
 });
 
 passport.deserializeUser((id: string, done: any) => {
-  console.log('desserialize User');
+  console.log('Deserialize User');
+  
   Person.findOne({
     where: { id },
   }).then((userRes: any) => {
@@ -28,7 +29,7 @@ passport.deserializeUser((id: string, done: any) => {
     }
     return done(null, false);
   }).catch((err: any) => {
-    console.log('Serialize error');
+    console.log('Deserialize error');
     console.log(err);
     return done(err, false);
   });
@@ -52,7 +53,7 @@ passport.use(
           if (userRes !== null) {
             return done(null, userRes);
           }
-          return done(null, false, req.flash('signupMessage', 'Can not add User'));
+          return done(null, false, req.flash('signupMessage', 'Cannot add User'));
         }).catch((err: any) => {
           console.log(`[catch insert]: ${err}`);
           return done(null, false, req.flash('signupMessage', 'The email is already taken'));
@@ -74,15 +75,15 @@ passport.use(
       Person.findOne({
         where: { email },
       }).then((userRes: any) => {
-        if (userRes !== null) {
-          bcrypt.compare(password, userRes.password, (err: any, isEqual: any) => {
-            if (err) return done(null, false, req.flash('signinMessage', err.message));
-            if (isEqual) {
-              return done(null, userRes);
-            }
-            return done(null, false, req.flash('signinMessage', 'User not found'));
-          });
-        }
+        if (userRes === null) return done(null, false, req.flash('signinMessage', 'User not found'));
+        bcrypt.compare(password, userRes.password, (err: any, isEqual: any) => {
+          if (err) return done(null, false, req.flash('signinMessage', err.message));
+          if (isEqual) {
+            return done(null, userRes);
+          }
+          return done(null, false, req.flash('signinMessage', 'Invalid password'));
+        });
+
       }).catch((err: any) => done(null, false, req.flash('signinMessage', err.message)));
     },
   ),

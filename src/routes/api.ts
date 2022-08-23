@@ -5,7 +5,22 @@ import { userReg } from '../utils/local-auth';
 import { sessionKey } from '../utils/keys';
 import Person from '../model/Person';
 import lists from './lists';
-// import { startTimer } from '../utils/metrics';
+import { Blacklist, blackListRepository } from '../model/Blacklist';
+import { Repository } from 'redis-om';
+
+(async () => {
+  console.log("**********");
+  // blackListRepository()
+  //   .then((blacklistRepo: Repository<Blacklist>) => {
+  //     blacklistRepo.createAndSave({ token: 'xd' })
+  //     .then((blackListElement: Blacklist) => {
+  //       return console.log(blackListElement);
+  //     })
+  //     .catch((err) => console.error(err));
+  //   })
+  //   .catch((err) => console.error(err));
+  console.log("**********");
+})();
 
 function loggin(user: any, req: any, res: any, next: any) {
   req.login(user, { session: false }, async (errLogin: any) => {
@@ -17,7 +32,7 @@ function loggin(user: any, req: any, res: any, next: any) {
     const token = jwt.sign({ person: userRes }, sessionKey, {
       expiresIn: 1 * 60 * 60 * 1000, // 1 hour
     });
-    return res.json({
+    return res.status(200).json({
       data: {
         user: userRes,
         token,
@@ -30,7 +45,7 @@ function loggin(user: any, req: any, res: any, next: any) {
 const api = express.Router();
 
 api.get('/', (req, res) => {
-  res.json({
+  res.status(200).json({
     data: 'Successfully connected',
     success: true,
   });
@@ -43,8 +58,10 @@ api.post(
       session: false,
     }, async (err, user) => {
       if (err || !user) {
+        res.status(400);
+        if (err) res.status(500);
         res.json({
-          data: 'Signin failture',
+          data: req.flash('signinMessage')[0],
           success: false,
         });
         return next(err);
@@ -61,8 +78,10 @@ api.post(
       session: false,
     }, async (err, user) => {
       if (err || !user) {
+        res.status(400);
+        if (err) res.status(500);
         res.json({
-          data: 'Signup failture',
+          data: req.flash('signupMessage')[0],
           success: false,
         });
         return next(err);
@@ -72,29 +91,75 @@ api.post(
   },
 );
 
+/*
+  blacklist.verification
+*/
+api.use((req, res, next) => {
+  const token = req.get('Authorization')?.toString().substring(7,) || '';
+
+  blackListRepository().then(async (blacklistRepo: Repository<Blacklist>) => {
+    blacklistRepo.search()
+      .where('token').equals(token).return.all()
+      .then((tokenFound) => {
+
+        console.log(tokenFound);
+        if (tokenFound[0] === undefined) return next();
+
+        return res.status(200).json({
+            data: ['Your token is not valid', tokenFound],
+            success: true,
+          });
+      })
+      .catch((err) => res.status(500).json({
+        data: ['blacklist.verification.2', err],
+        success: false,
+      }));
+    })
+    .catch((err) => res.status(500).json({
+      data: ['blacklist.verification.1', err],
+      success: false,
+    }));
+  return 0;
+});
+
+//  Authenticate user with passport
 api.use(passport.authenticate(userReg.tokenJWT, { session: false }));
 
-//
-// authenticated routes
-//
+// Authenticated routes
+api.post('/logout', async (req, res) => {
+  const token = req.get('Authorization')?.toString().substring(7,) || '';
 
-api.get('/logout', (req, res, next) => {
   req.logOut((err) => {
-    if (err) { return next(err); }
-    res.redirect('/');
+    if (err) return res.status(500).json({
+      data: err,
+      success: false,
+    });
+
+    return res.status(200).json({
+      data: 'req.logout-1',
+      success: true,
+    });
   });
 
-  res.json({
-    data: 'You have Log out',
-    success: true,
+  blackListRepository()
+    .then((blacklistRepo: Repository<Blacklist>) => {
+      blacklistRepo.createAndSave({ token })
+      .then((blackListElement: Blacklist) => {
+        return res.status(200).json({
+          data: ['You have logged out', blackListElement],
+          success: true,
+        });
+      })
+      .catch((err) => res.status(500).json({data: ['req.logout.2', err], success: false}));
+    })
+    .catch((err) => res.status(500).json({data: ['req.logout.3', err], success: false}));
   });
-});
 
 api.post(
   '/profile',
   (req, res) => {
     if (req.user instanceof Person) {
-      res.json({
+      res.status(200).json({
         data: {
           message: 'You already have to access to profile!',
           user: {

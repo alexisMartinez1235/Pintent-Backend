@@ -6,7 +6,7 @@
 <a href="/profile">profile</a> 
 
 <%
-if (data.length === undefined) {
+if (data === null || data.length === undefined) {
   data = [data]
 %>
   <form action="<%= path %>" method="POST">
@@ -25,7 +25,7 @@ if (data.length === undefined) {
 
 <ul>
   <% data.map((list) => { %>
-      /list/<%= list.idList %>/pin  
+      /list/<%= list.idList %>/pin
       <li>
         <button
           type="submit"

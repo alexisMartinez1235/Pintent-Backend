@@ -26,6 +26,8 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "prom-client": "^14.0.1",
+    "redis": "^4.2.0",
+    "redis-om": "^0.3.6",
     "response-time": "^2.3.2",
     "sequelize": "^6.17.0",
     "ts-node": "10.6.0",

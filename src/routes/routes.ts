@@ -3,6 +3,7 @@ import passport from 'passport';
 import Person from '../model/Person';
 import { isAuthenticated, isUnauthenticated } from '../utils/authenticated';
 import { userReg } from '../utils/local-auth';
+import list from './list';
 import lists from './lists';
 
 const router = express.Router();
@@ -74,7 +75,7 @@ router.get(
   (req, res, next) => {
     req.logOut((err) => {
       if (err) return next(err);
-      res.redirect('/');
+      return res.redirect('/');
     });
     next();
   },
@@ -83,5 +84,8 @@ router.get(
 
 // routes of /
 router.use('/list', lists);
-
+router.use('/list/:idList', (req, _res, next) => {
+  req.app.locals.idList = req.params.idList;
+  next();
+}, list);
 export default router;

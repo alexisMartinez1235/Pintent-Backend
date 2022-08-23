@@ -6,10 +6,26 @@
 </h3>
 <a href="/profile">profile</a>
 
-<%
-if (data.length === undefined) {
-  data = [data]
-%>
+<% function showData(pin) { %>
+  <div>
+    <h1> email: <%= pin.email %> </h1>
+    <h3>image:</h3>
+    <img src="<%= pin.image %>" alt="" width="500">
+    <h3> descr: <%= pin.description %> </h3>
+    <h4> inTrash: <%= pin.inTrash %> </h4>
+    <h4> createdAt: <%= pin.createdAt %> </h4>
+    <h4> updatedAt: <%= pin.updatedAt %> </h4>
+    <!-- <%=  JSON.stringify(pin) %> -->
+  </div>
+<% } %>
+
+<% if (data.length === undefined) {
+  showData(data) %>
+  <form method="DELETE" action="<%= path %>">
+    <button type="submit">Delete</button>
+  </form>
+<% } else { %>
+
   <form action="<%= path %>" method="POST">
     <input
       type="description"
@@ -22,27 +38,21 @@ if (data.length === undefined) {
       Add pin
     </button>
   </form>
-<% } %>
 
-<ul> 
-  <% data.map((pin) => { %>
-      <%= path %>/<%= pin.id %>
-      <li>
-        <a href="<%= path %>/<%= pin.id %>" >
-          <button>
-            <h1> email: <%= pin.email %> </h1>
-            <h3>image:</h3>
-            <img src="<%= pin.image %>" alt="" width="500">
-            <h3> descr: <%= pin.description %> </h3>
-            <h4> inTrash: <%= pin.inTrash %> </h4>
-            <h4> createdAt: <%= pin.createdAt %> </h4>
-            <h4> updatedAt: <%= pin.updatedAt %> </h4>
-            <!-- <%=  JSON.stringify(pin) %> -->
-          </button>
-        </a>
-        <form method="DELETE" action="<%= path %>/<%= pin.id %>">
-          <button type="submit">Delete</button>
-        </form>
-      </li>
-  <% }); %>
-</ul>
+  <% 
+  if (data !== null) {
+  %>
+    <ul>
+      <% data.map((pin) => { %>
+        <!-- <%= path %>/<%= pin.id %> -->
+        <li>
+          <a href="<%= path %>/<%= pin.id %>" >
+            <button>
+              <%= showData(pin) %>
+            </button>
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+<% } %>
