@@ -11,35 +11,50 @@ shareElement.use((req, res, next) => {
 
   PersonHasElement.findOne({
     where: { idList, emailPerson },
-  }).then((personhList: PersonHasElement | null) => {
-    if (personhList !== null) return next();
-    return res.status(200).format(formatRes(req.originalUrl, { data: 'User dont have permissions to access to this list', success: false }));
-  }).catch((err: any) => {
-    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
-  });
+  })
+    .then((personhList: PersonHasElement | null) => {
+      if (personhList !== null) return next();
+      return res
+        .status(200)
+        .format(
+          formatRes(req.originalUrl, {
+            data: 'User dont have permissions to access to this list',
+            success: false,
+          })
+        );
+    })
+    .catch((err: any) => {
+      res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
+    });
 });
 
 shareElement.use(startTimer);
 
-shareElement.get('/', (req : Request, res : Response) => {
-  const variable : string = req.query.variable?.toString() || 'emailPerson';
-  const order : string = req.query.order?.toString() || 'ASC';
-  const { idList } = req.app.locals.list;
-  const { formatRes } = req.app.locals;
+shareElement.get(
+  '/',
+  (req: Request, res: Response) => {
+    const variable: string = req.query.variable?.toString() || 'emailPerson';
+    const order: string = req.query.order?.toString() || 'ASC';
+    const { idList } = req.app.locals.list;
+    const { formatRes } = req.app.locals;
 
-  PersonHasElement.findAll({
-    // attributes: ['emailPerson'],
-    order: [
-      [variable, order],
-    ],
-    where: { idList },
-  }).then((personhList: PersonHasElement[]) => {
-    req.app.locals.success = true;
-    return res.status(200).format(formatRes(req.originalUrl, { data: personhList, success: true }));
-  }).catch((err: any) => {
-    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
-  });
-}, stopTimer);
+    PersonHasElement.findAll({
+      // attributes: ['emailPerson'],
+      order: [[variable, order]],
+      where: { idList },
+    })
+      .then((personhList: PersonHasElement[]) => {
+        req.app.locals.success = true;
+        return res
+          .status(200)
+          .format(formatRes(req.originalUrl, { data: personhList, success: true }));
+      })
+      .catch((err: any) => {
+        res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
+      });
+  },
+  stopTimer
+);
 
 // verifies owner permissions
 shareElement.use((req, res, next) => {
@@ -49,37 +64,44 @@ shareElement.use((req, res, next) => {
 
   PersonHasElement.findOne({
     where: { idList, emailPerson },
-  }).then((personhList: PersonHasElement | null) => {
-    if ((personhList !== null && personhList.getDataValue('isOwner')) || email === emailPerson) return next();
-    return res.status(200).format(formatRes(req.originalUrl, { data: 'User dont have owner permissions', success: false }));
-  }).catch((err: any) => {
-    res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
-  });
+  })
+    .then((personhList: PersonHasElement | null) => {
+      if ((personhList !== null && personhList.getDataValue('isOwner')) || email === emailPerson)
+        return next();
+      return res
+        .status(200)
+        .format(
+          formatRes(req.originalUrl, { data: 'User dont have owner permissions', success: false })
+        );
+    })
+    .catch((err: any) => {
+      res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
+    });
 });
 
-shareElement.post('/', (req : Request, res : Response, next) => {
-  const {
-    email: emailPerson,
+shareElement.post('/', (req: Request, res: Response, next) => {
+  const { email: emailPerson, isOwner, canRead, canWrite } = req.body;
+  const { idList } = req.app.locals.list;
+  const { formatRes } = req.app.locals;
+
+  PersonHasElement.create({
+    emailPerson,
+    idList,
     isOwner,
     canRead,
     canWrite,
-  } = req.body;
-  const { idList } = req.app.locals.list;
-  const { formatRes } = req.app.locals;
-  
-  PersonHasElement.create({
-    emailPerson, idList, isOwner, canRead, canWrite,
   })
     .then((personhList: PersonHasElement) => {
       req.app.locals.success = true;
       res.status(200).format(formatRes(req.originalUrl, { data: personhList, success: true }));
       next();
-    }).catch((err: any) => {
+    })
+    .catch((err: any) => {
       res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
     });
 });
 
-shareElement.delete('/', (req : Request, res : Response, next) => {
+shareElement.delete('/', (req: Request, res: Response, next) => {
   const { email: emailPerson } = req.body;
   const { idList } = req.app.locals.list;
   const { formatRes } = req.app.locals;
@@ -88,7 +110,8 @@ shareElement.delete('/', (req : Request, res : Response, next) => {
       req.app.locals.success = true;
       res.status(200).format(formatRes(req.originalUrl, { data: results, success: true }));
       next();
-    }).catch((err: any) => {
+    })
+    .catch((err: any) => {
       res.status(500).format(formatRes(req.originalUrl, { data: err, success: false }));
     });
 });

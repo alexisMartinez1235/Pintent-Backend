@@ -4,7 +4,33 @@
 <%if (email) {%>
   <h4><%= email %></h4>
 <% } %>
-<a href="/logout">logout</a> 
-<a href="/list/">lists</a> 
+ 
+<br/>
+<form action="/logout" method="GET">
+  <button
+    type="submit"
+  >
+    Logout
+  </button>
+</form>
+
+<br/>
+<form action="/list" method="GET">
+  <button
+    type="submit"
+  >
+    Get lists
+  </button>
+</form>
+
+<br/>
+<form action="/user" method="POST">
+  <button
+    type="submit"
+  >
+    Delete account
+  </button>
+</form>
+
 <!-- <a href="/list/:idList/pin:idPin">list/id/pin</a>  -->
 <!-- <a href="/list/idList/share">list/id/share</a>  -->

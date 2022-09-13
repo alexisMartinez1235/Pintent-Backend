@@ -17,7 +17,7 @@ export const sequelize = new Sequelize(
     define: {
       freezeTableName: true, // for make singular table name
     },
-  },
+  }
 );
 
 //mongo config
@@ -30,17 +30,17 @@ const redisURI: string = 'redis://:jiqopvnzuwng@redis:6379';
 // (async () => {
 //   console.log(await redisClient.execute(['PING']));
 //   return redisClient;
-// })(); 
+// })();
 
 async function clientRedis(): Promise<Client> {
   const redisURI: string = 'redis://:jiqopvnzuwng@redis:6379';
   const client: Client = new Client();
   await client.open(redisURI);
-  
+
   // console.log("ping1");
   // console.log(await client.execute(['PING']));
-  
+
   return client;
-};
-  
+}
+
 export { redisURI, clientRedis };

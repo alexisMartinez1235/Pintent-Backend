@@ -82,10 +82,36 @@ router.get(
   isAuthenticated
 );
 
+router.post('/user', (req, res) => {
+  if (req.user instanceof Person) {
+    return Person.destroy({
+      where: { email: req.user.getDataValue('email') }
+    }).then((destroyRes: number) => {
+      let message = 'the account was not deleted';
+      if (destroyRes > 0) message = 'the account was deleted'
+      
+      return res.status(200).render('message', {
+        data: message,
+        success: true,
+      })
+    }).catch((err) => {
+      return res.status(500).render('message', {
+        data: ['user.delete.1', err],
+        success: false,
+      })
+    });
+  }
+  return res.status(500).json({
+    data: 'req.user is not instance of Person',
+    success: false,
+  });
+});
+
 // routes of /
 router.use('/list', lists);
 router.use('/list/:idList', (req, _res, next) => {
   req.app.locals.idList = req.params.idList;
   next();
 }, list);
+
 export default router;

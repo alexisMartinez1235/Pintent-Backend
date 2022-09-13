@@ -9,7 +9,7 @@ import { Blacklist, blackListRepository } from '../model/Blacklist';
 import { Repository } from 'redis-om';
 
 (async () => {
-  console.log("**********");
+  // console.log("**********");
   // blackListRepository()
   //   .then((blacklistRepo: Repository<Blacklist>) => {
   //     blacklistRepo.createAndSave({ token: 'xd' })
@@ -19,7 +19,7 @@ import { Repository } from 'redis-om';
   //     .catch((err) => console.error(err));
   //   })
   //   .catch((err) => console.error(err));
-  console.log("**********");
+  // console.log("**********");
 })();
 
 function loggin(user: any, req: any, res: any, next: any) {
@@ -51,12 +51,13 @@ api.get('/', (req, res) => {
   });
 });
 
-api.post(
-  '/signin',
-  (req, res, next) => {
-    passport.authenticate(userReg.localSignin, {
+api.post('/signin', (req, res, next) => {
+  passport.authenticate(
+    userReg.localSignin,
+    {
       session: false,
-    }, async (err, user) => {
+    },
+    async (err, user) => {
       if (err || !user) {
         res.status(400);
         if (err) res.status(500);
@@ -67,16 +68,17 @@ api.post(
         return next(err);
       }
       return loggin(user, req, res, next);
-    })(req, res, next);
-  },
-);
+    }
+  )(req, res, next);
+});
 
-api.post(
-  '/signup',
-  (req, res, next) => {
-    passport.authenticate(userReg.localSignup, {
+api.post('/signup', (req, res, next) => {
+  passport.authenticate(
+    userReg.localSignup,
+    {
       session: false,
-    }, async (err, user) => {
+    },
+    async (err, user) => {
       if (err || !user) {
         res.status(400);
         if (err) res.status(500);
@@ -87,38 +89,45 @@ api.post(
         return next(err);
       }
       return loggin(user, req, res, next);
-    })(req, res, next);
-  },
-);
+    }
+  )(req, res, next);
+});
 
 /*
   blacklist.verification
 */
 api.use((req, res, next) => {
-  const token = req.get('Authorization')?.toString().substring(7,) || '';
+  const token = req.get('Authorization')?.toString().substring(7) || '';
 
-  blackListRepository().then(async (blacklistRepo: Repository<Blacklist>) => {
-    blacklistRepo.search()
-      .where('token').equals(token).return.all()
-      .then((tokenFound) => {
+  blackListRepository()
+    .then(async (blacklistRepo: Repository<Blacklist>) => {
+      blacklistRepo
+        .search()
+        .where('token')
+        .equals(token)
+        .return.all()
+        .then((tokenFound) => {
+          console.log(tokenFound);
+          if (tokenFound[0] === undefined) return next();
 
-        console.log(tokenFound);
-        if (tokenFound[0] === undefined) return next();
-
-        return res.status(200).json({
+          return res.status(400).json({
             data: ['Your token is not valid', tokenFound],
             success: true,
           });
-      })
-      .catch((err) => res.status(500).json({
-        data: ['blacklist.verification.2', err],
-        success: false,
-      }));
+        })
+        .catch((err) =>
+          res.status(500).json({
+            data: ['blacklist.verification.2', err],
+            success: false,
+          })
+        );
     })
-    .catch((err) => res.status(500).json({
-      data: ['blacklist.verification.1', err],
-      success: false,
-    }));
+    .catch((err) =>
+      res.status(500).json({
+        data: ['blacklist.verification.1', err],
+        success: false,
+      })
+    );
   return 0;
 });
 
@@ -126,14 +135,15 @@ api.use((req, res, next) => {
 api.use(passport.authenticate(userReg.tokenJWT, { session: false }));
 
 // Authenticated routes
-api.post('/user/logout', async (req, res) => {
-  const token = req.get('Authorization')?.toString().substring(7,) || '';
+api.post('/logout', async (req, res) => {
+  const token = req.get('Authorization')?.toString().substring(7) || '';
 
   req.logOut((err) => {
-    if (err) return res.status(500).json({
-      data: err,
-      success: false,
-    });
+    if (err)
+      return res.status(500).json({
+        data: err,
+        success: false,
+      });
 
     return res.status(200).json({
       data: 'req.logout-1',
@@ -143,55 +153,55 @@ api.post('/user/logout', async (req, res) => {
 
   blackListRepository()
     .then((blacklistRepo: Repository<Blacklist>) => {
-      blacklistRepo.createAndSave({ token })
-      .then((blackListElement: Blacklist) => {
-        return res.status(200).json({
-          data: ['You have logged out', blackListElement],
-          success: true,
-        });
-      })
-      .catch((err) => res.status(500).json({data: ['req.logout.2', err], success: false}));
+      blacklistRepo
+        .createAndSave({ token })
+        .then((blackListElement: Blacklist) => {
+          return res.status(200).json({
+            data: ['You have logged out', blackListElement],
+            success: true,
+          });
+        })
+        .catch((err) => res.status(500).json({ data: ['req.logout.2', err], success: false }));
     })
-    .catch((err) => res.status(500).json({data: ['req.logout.3', err], success: false}));
-  });
+    .catch((err) => res.status(500).json({ data: ['req.logout.3', err], success: false }));
+});
 
-api.post(
-  '/user',
-  (req, res) => {
-    if (req.user instanceof Person) {
-      res.status(200).json({
-        data: {
-          message: 'You already have to access to profile!',
-          user: {
-            id: req.user.getDataValue('id'),
-            email: req.user.getDataValue('email'),
-          },
-          token: req.query.secret_token,
+api.post('/profile', (req, res) => {
+  if (req.user instanceof Person) {
+    res.status(200).json({
+      data: {
+        message: 'You already have to access to profile!',
+        user: {
+          id: req.user.getDataValue('id'),
+          email: req.user.getDataValue('email'),
         },
-        success: true,
-      });
-    }
-  },
-);
+        token: req.query.secret_token,
+      },
+      success: true,
+    });
+  }
+});
 
 api.delete('/user', (req, res) => {
   if (req.user instanceof Person) {
     return Person.destroy({
-      where: { email: req.user.getDataValue('email')}
-    }).then((destroyRes: number) => {
-      let message = 'the account was not deleted';
-      if (destroyRes > 0) message = 'the account was deleted'
-      
-      return res.status(200).json({
-        data: message,
-        success: true,
+      where: { email: req.user.getDataValue('email') },
+    })
+      .then((destroyRes: number) => {
+        let message = 'the account was not deleted';
+        if (destroyRes > 0) message = 'the account was deleted';
+
+        return res.status(200).json({
+          data: message,
+          success: true,
+        });
       })
-    }).catch((err) => {
-      return res.status(500).json({
-        data: ['user.delete.1', err],
-        success: false,
-      })
-    });
+      .catch((err) => {
+        return res.status(500).json({
+          data: ['user.delete.1', err],
+          success: false,
+        });
+      });
   }
   return res.status(500).json({
     data: 'req.user is not instance of Person',

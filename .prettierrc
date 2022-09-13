@@ -1,0 +1,7 @@
+{
+  "semi": true,
+  "tabwidth": 4,
+  "printWidth": 100,
+  "singleQuote": true,
+  "trailingComa": "ES2021"
+}
